@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AutoImportSettings">
+    <option name="autoReloadType" value="SELECTIVE" />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="4c0eda95-c780-4dbe-a589-e82317ce080e" name="Changes" comment="">
+      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/stamps/forms.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/stamps/templates/create.html" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/stamps/templates/home.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stampede/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/stampede/urls.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/stamps/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/stamps/views.py" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="GithubPullRequestsUISettings"><![CDATA[{
+  "selectedUrlAndAccountId": {
+    "url": "https://github.com/dman-camps/The-Stampede.git",
+    "accountId": "7a38337a-c12f-4470-9148-04401d01bd2c"
+  }
+}]]></component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "git-widget-placeholder": "main"
+  }
+}]]></component>
+  <component name="RecentsManager">
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\cfors\Downloads\The-Stampede\stamps" />
+    </key>
+  </component>
+  <component name="TaskManager">
+    <servers />
+  </component>
+</project>

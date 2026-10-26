@@ -1,6 +1,11 @@
 <!DOCTYPE html>
 <html>
 <body>
+    {% if user.is_authenticated %}
+    <p>Signed in as {{ user.username }}. <a href="{% url 'verify_email' %}">Verify email</a></p>
+    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button>Log out</button></form>
+    {% else %}<a href="{% url 'register' %}">Register</a> <a href="{% url 'login' %}">Log in</a>{% endif %}
+    {% for message in messages %}<p>{{ message }}</p>{% endfor %}
     <button onclick="window.location.href='create/'">Create</button>
 </body>
 </html>

@@ -1,0 +1,1 @@
+<!doctype html><title>Stamp</title><h1>{{ stamp.title }}</h1><p>{{ stamp.desc }}</p><p>{{ stamp.date }} {{ stamp.time }} | {{ stamp.location }}</p><form method="post" action="{% url 'join_permission' stamp.pk %}">{% csrf_token %}<button>Check join permission (T3 demo only)</button></form><a href="/">Home</a>

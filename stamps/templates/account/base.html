@@ -1,0 +1,7 @@
+<!doctype html>
+<html><head><title>The Stampede</title></head><body>
+<a href="{% url 'home' %}">Home</a>
+<p>Use your @unomaha.edu inbox and a separate Stampede password. Verification confirms inbox access, not enrollment.</p>
+{% for message in messages %}<p>{{ message }}</p>{% endfor %}
+{% block content %}{% endblock %}
+</body></html>

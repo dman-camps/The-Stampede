@@ -49,3 +49,8 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report by {self.reporter.username} for {self.stamp.title}"
+
+
+
+
+

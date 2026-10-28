@@ -1,17 +1,101 @@
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Create a Stamp | The Stampede</title>
+    <!--loads website styling-->
+    <link rel="stylesheet" href="{% static 'stamps/styles.css' %}">
+</head>
 <body>
-    <h1>Create Stamp</h1>
+    <!--adds shared header-->
+    {% include 'stamps/_header.html' %}
 
-    <form method="POST">
-        {% csrf_token %}
+    <main>
+        <!--displays Stamp creation form-->
+        <section class="card account-card">
+            <h1>Create a Stamp</h1>
+            <p class="muted">
+                Create an activity for other UNO students to discover and join.
+                Fill out the details below.
+            </p>
+            <!--processes submitted form-->
+            <form method="POST">
+                {% csrf_token %}
+                {% for field in form %}
+                    {% if field.name == "location" %}
+                        <p>
+                            {{ field.label_tag }}
+                            {{ field }}
+                            {{ field.errors }}
+                        </p>
+                        <!--shows input for custom location-->
+                        <p id="other-location-row" hidden>
+                            {{ form.other_location.label_tag }}
+                            {{ form.other_location }}
+                            {{ form.other_location.errors }}
+                        </p>
+                        <!--shows input for specific area-->
+                        <p id="specify-area-row" hidden>
+                            {{ form.specify_area.label_tag }}
+                            {{ form.specify_area }}
+                            {{ form.specify_area.errors }}
+                        </p>
+                    {% elif field.name != "other_location" and field.name != "specify_area" %}
+                        {% if field.name == "cost" %}
+                            <p>
+                                {{ field.label_tag }}
+                                <span class="cost-input">
+                                    <span class="dollar-sign">$</span>
+                                    {{ field }}
+                                </span>
+                                {{ field.errors }}
+                            </p>
+                        {% else %}
+                            <p>
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {{ field.errors }}
+                            </p>
+                        {% endif %}
+                    {% endif %}
+                {% endfor %}
 
-        {{ form.as_p }}
+                <!--submits Stamp creation form-->
+                <button type="submit">Create Stamp</button>
+            </form>
 
-        <button type="submit">Create Stamp</button>
-    </form>
+            <p>
+                <!--provides link back home-->
+                <a href="/">Back to Home</a>
+            </p>
+        </section>
+    </main>
+    <script>
+        //gets location form elements
+        const locationSelect = document.getElementById("id_location");
+        const otherInput = document.getElementById("id_other_location");
+        const areaInput = document.getElementById("id_specify_area");
 
-    <br>
-    <a href="/">Back to Home</a>
+        const otherRow = document.getElementById("other-location-row");
+        const areaRow = document.getElementById("specify-area-row");
+
+        //updates fields based on selected location
+        function updateLocationFields() {
+            const selected = locationSelect.value;
+
+            otherRow.hidden = selected !== "Other";
+            areaRow.hidden = selected === "";
+
+            if (selected !== "Other") {
+                otherInput.value = "";
+            }
+        }
+
+        //updates fields when location changes
+        locationSelect.addEventListener("change", updateLocationFields);
+        updateLocationFields();
+    </script>
 </body>
 </html>

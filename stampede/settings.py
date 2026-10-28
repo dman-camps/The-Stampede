@@ -29,7 +29,7 @@ if not SECRET_KEY:
 
 # SECURITY WARNING: don't run with debug turned on in production!
 
-DEBUG = False
+DEBUG = True
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 CSRF_TRUSTED_ORIGINS = []
@@ -145,7 +145,11 @@ EMAIL_USE_TLS = True
 EMAIL_TIMEOUT = 10
 DEFAULT_FROM_EMAIL = os.environ.get('STAMPEDE_FROM_EMAIL', 'stampede@example.invalid')
 
-EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+#sets the email backend using an environment variable
+EMAIL_BACKEND = os.environ.get(
+    'STAMPEDE_EMAIL_BACKEND',
+    'django.core.mail.backends.smtp.EmailBackend'
+)
 
 AUTHENTICATION_BACKENDS = ['allauth.account.auth_backends.AuthenticationBackend']
 ACCOUNT_ADAPTER = 'stamps.adapters.UNOAccountAdapter'
@@ -161,6 +165,7 @@ ACCOUNT_EMAIL_VERIFICATION_SUPPORTS_CHANGE = 0
 ACCOUNT_RATE_LIMITS = {'confirm_email': '1/60s/key,5/h/ip'}
 ACCOUNT_EMAIL_SUBJECT_PREFIX = '[The Stampede] '
 ACCOUNT_LOGOUT_ON_GET = False
+ACCOUNT_FORMS = { 'signup': 'stamps.forms.CustomSignupForm',}
 # Share rate limits between local workers and restarts; migrate creates this table.
 CACHES = {'default': {'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
                       'LOCATION': 'stampede_cache'}}

@@ -1,1 +1,104 @@
-<!doctype html><title>Stamp</title><h1>{{ stamp.title }}</h1><p>{{ stamp.desc }}</p><p>{{ stamp.date }} {{ stamp.time }} | {{ stamp.location }}</p><form method="post" action="{% url 'join_permission' stamp.pk %}">{% csrf_token %}<button>Check join permission (T3 demo only)</button></form><a href="/">Home</a>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>{{ stamp.title }} | The Stampede</title>
+
+    <!--loads static files-->
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'stamps/styles.css' %}">
+</head>
+
+<body>
+    <!--adds shared header-->
+    {% include 'stamps/_header.html' %}
+
+    <!--displays Stamp details page-->
+    <main class="stamp-detail-page">
+        <a href="/" class="back-link">&larr; Back to Home</a>
+
+        <article class="stamp-detail-card">
+            <!--displays Stamp title and description-->
+            <div class="stamp-detail-header">
+                <p class="stamp-label">STAMP DETAILS</p>
+                <h1>{{ stamp.title }}</h1>
+
+                <p class="stamp-description">
+                    {{ stamp.desc|default:"No description provided."|linebreaksbr }}
+                </p>
+            </div>
+
+            <!--displays event information-->
+            <div class="stamp-detail-info">
+                <div class="detail-item">
+                    <span class="detail-label">Date</span>
+                    <span class="detail-value">{{ stamp.date|date:"F j, Y" }}</span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Start Time</span>
+                    <span class="detail-value">{{ stamp.time|time:"g:i A" }}</span>
+                </div>
+
+                <!--shows end time when available-->
+                <div class="detail-item">
+                    <span class="detail-label">End Time</span>
+                    <span class="detail-value">
+                        {% if stamp.end_time %}
+                            {{ stamp.end_time|time:"g:i A" }}
+                        {% else %}
+                            Not specified
+                        {% endif %}
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Location</span>
+                    <span class="detail-value">{{ stamp.location }}</span>
+                </div>
+
+                <!--displays cost or free status-->
+                <div class="detail-item">
+                    <span class="detail-label">Cost</span>
+                    <span class="detail-value">
+                        {% if stamp.cost %}
+                            ${{ stamp.cost|floatformat:2 }}
+                        {% else %}
+                            Free
+                        {% endif %}
+                    </span>
+                </div>
+
+                <!--shows participant count and limit-->
+                <div class="detail-item">
+                    <span class="detail-label">Participants</span>
+                    <span class="detail-value">
+                        {{ stamp.num_participants }} / {{ stamp.max_participants }}
+                    </span>
+                </div>
+
+                <div class="detail-item">
+                    <span class="detail-label">Created By</span>
+                    <span class="detail-value">
+                        {{ stamp.owner.username|default:"Unknown" }}
+                    </span>
+                </div>
+            </div>
+
+            <!--provides join and home actions-->
+            <div class="stamp-detail-actions">
+                <form method="post" action="{% url 'join_permission' stamp.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="stamp-join-button">
+                        Check Join Permission
+                    </button>
+                </form>
+
+                <a href="/" class="stamp-home-link">Return Home</a>
+            </div>
+        </article>
+    </main>
+</body>
+</html>

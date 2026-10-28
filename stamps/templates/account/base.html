@@ -1,7 +1,37 @@
+{% load static %}
 <!doctype html>
-<html><head><title>The Stampede</title></head><body>
-<a href="{% url 'home' %}">Home</a>
-<p>Use your @unomaha.edu inbox and a separate Stampede password. Verification confirms inbox access, not enrollment.</p>
-{% for message in messages %}<p>{{ message }}</p>{% endfor %}
-{% block content %}{% endblock %}
-</body></html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Stampede</title>
+    <link rel="stylesheet" href="{% static 'stamps/styles.css' %}">
+</head>
+<body>
+    <!-- adds shared header -->
+    {% include 'stamps/_header.html' %}
+
+    <main>
+        <!-- displays messages to the user -->
+        {% if messages %}
+            <ul class="messages" aria-live="polite">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <!-- displays account page -->
+        <section class="card account-card">
+            <p class="muted">
+                Use your @unomaha.edu inbox and a separate Stampede
+                password. Email verification confirms inbox access,
+                not enrollment.
+            </p>
+
+            <!-- displays login or registration form -->
+            {% block content %}{% endblock %}
+        </section>
+    </main>
+</body>
+</html>

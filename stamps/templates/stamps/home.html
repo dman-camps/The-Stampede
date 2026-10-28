@@ -1,0 +1,87 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Stampede | Home</title>
+    <link rel="stylesheet" href="{% static 'stamps/styles.css' %}">
+</head>
+
+<body>
+    <!--adds shared header-->
+    {% include 'stamps/_header.html' %}
+    <main>
+        <!--displays messages from Django-->
+        {% if messages %}
+            <ul class="messages" aria-live="polite">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        <!--displays home page heading-->
+        <h1>Connect through Stamps</h1>
+        {% if allowed %}
+            <!--shows access status and username-->
+            <p>Stamp access enabled · {{ user.username }}</p>
+            <p>
+                <a class="button" href="{% url 'create' %}">Create a Stamp</a>
+            </p>
+            <!--displays available Stamps-->
+            <div class="grid">
+                {% for stamp in stamps %}
+                    <article class="card">
+                        <h2>
+                            <a href="{% url 'stamp_detail' stamp.pk %}">
+                                {{ stamp.title }}
+                            </a>
+                        </h2>
+                        <p>{{ stamp.date }} · {{ stamp.time }}</p>
+                        <p>{{ stamp.location }}</p>
+                        <p>{{ stamp.participant_count }} / {{ stamp.max_participants }} participants</p>
+                        <p class="muted">
+                            Organizer: {{ stamp.creator.username|default:'Unassigned' }}
+                        </p>
+                    </article>
+                {% empty %}
+                    <!--shows message when no Stamps exist-->
+                    <p>No Stamps yet. Create the first one.</p>
+                {% endfor %}
+            </div>
+        {% elif user.is_authenticated %}
+            <!--shows verification message for signed in users-->
+            <section class="card">
+                <h2>Access pending</h2>
+                <p>
+                    Your account is signed in. Verify your UNO email to unlock Stamps.
+                </p>
+                <p>
+                    Registration and a UNO email address do not establish student eligibility.
+                </p>
+                <p>
+                    <a href="{% url 'verify_email' %}">Verify email</a>
+                </p>
+            </section>
+        {% else %}
+            <!--shows login options for visitors-->
+            <section class="card">
+                <h2>Welcome to The Stampede</h2>
+                <p>
+                    Sign in to connect with fellow UNO students through Stamps.
+                </p>
+                <div class="home-auth-buttons">
+                    <a class="button" href="{% url 'login' %}">
+                        The Stampede Login
+                    </a>
+                    <a class="button" href="{% url 'register' %}">
+                        Create an Account
+                    </a>
+                </div>
+            </section>
+        {% endif %}
+        <!--displays team footer-->
+        <footer>Purple Team · The Stampede</footer>
+    </main>
+</body>
+</html>

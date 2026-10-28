@@ -1,0 +1,59 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ stamp.title }} - Participants</title>
+    <link rel="stylesheet" href="{% static 'stamps/styles.css' %}">
+</head>
+<body>
+    <!--displays participant page-->
+    <main class="stamp-detail-page">
+        <section class="stamp-detail-card">
+            <body>
+                <!--adds shared header-->
+                {% include 'stamps/_header.html' %}
+
+            <!--displays Stamp participants-->
+            <section class="stamp-participants-section">
+                <h2>Who's Going?</h2>
+
+                <p>
+                    <!--shows participant count-->
+                    <span class="detail-label">Participants</span>
+                    <span class="detail-value">
+                        {{ participants|length }}/{{ stamp.max_participants }}
+                    </span>
+                </p>
+
+                <!--lists participants or empty message-->
+                {% if participants %}
+                    <ul>
+                        {% for participant in participants %}
+                            <li>{{ participant.username }}</li>
+                        {% endfor %}
+                    </ul>
+                {% else %}
+                    <p>No participants yet.</p>
+                {% endif %}
+            </section>
+
+            <!--provides Stamp actions-->
+            <div class="stamp-detail-actions">
+                <form method="POST" action="{% url 'leave_stamp' stamp.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="stamp-join-button">
+                        Leave Stamp
+                    </button>
+                </form>
+
+                <a href="{% url 'stamp_detail' stamp.pk %}" class="stamp-home-link">
+                    Back to Stamp
+                </a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

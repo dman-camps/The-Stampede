@@ -1,0 +1,27 @@
+{% load static %}
+
+<!--displays shared website header-->
+<header class="site-header">
+    <strong class="site-title">The Stampede</strong>
+
+    <!--provides navigation links-->
+    <nav>
+        <a href="{% url 'home' %}">Home</a>
+
+        {% if user.is_authenticated %}
+
+            <!--shows signed in username-->
+            <span>Signed in: {{ user.username }}</span>
+
+            <!--provides logout form-->
+            <form method="post" action="{% url 'logout' %}">
+                {% csrf_token %}
+                <button type="submit">Log out</button>
+            </form>
+        {% else %}
+            <!--provides login and registration links-->
+            <a href="{% url 'login' %}">Login</a>
+            <a href="{% url 'register' %}">Register</a>
+        {% endif %}
+    </nav>
+</header>

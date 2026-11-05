@@ -1,0 +1,39 @@
+
+name: Update The Stampede
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Update Lightsail server
+        env:
+          SSH_KEY: ${{ secrets.STAMPEDE_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          printf '%s\n' "$SSH_KEY" > ~/.ssh/stampede-deploy
+          chmod 600 ~/.ssh/stampede-deploy
+
+          ssh -i ~/.ssh/stampede-deploy -o StrictHostKeyChecking=accept-new ubuntu@52.42.194.120 'bash -se' <<'REMOTE'
+            set -e
+            cd /home/ubuntu/The-Stampede
+            git pull --ff-only origin main
+            source /home/ubuntu/stampede-venv/bin/activate
+            pip install -r requirements.txt
+
+            set -a
+            source /home/ubuntu/.config/the-stampede/app.env
+            set +a
+
+            export DJANGO_SETTINGS_MODULE=production
+            export PYTHONPATH=/home/ubuntu/stampede-config:/home/ubuntu/The-Stampede
+
+            python manage.py migrate --noinput
+            python manage.py collectstatic --noinput
+            sudo systemctl restart stampede
+            sudo systemctl is-active --quiet stampede
+          REMOTE

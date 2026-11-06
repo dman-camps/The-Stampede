@@ -9,13 +9,12 @@
     <link rel="stylesheet" href="{% static 'stamps/styles.css' %}">
 </head>
 <body>
+    <!--adds shared header-->
+    {% include 'stamps/_header.html' %}
+
     <!--displays participant page-->
     <main class="stamp-detail-page">
         <section class="stamp-detail-card">
-            <body>
-                <!--adds shared header-->
-                {% include 'stamps/_header.html' %}
-
             <!--displays Stamp participants-->
             <section class="stamp-participants-section">
                 <h2>Who's Going?</h2>
@@ -24,7 +23,7 @@
                     <!--shows participant count-->
                     <span class="detail-label">Participants</span>
                     <span class="detail-value">
-                        {{ participants|length }}/{{ stamp.max_participants }}
+                        {{ participant_count }}/{{ stamp.max_participants }}
                     </span>
                 </p>
 
@@ -42,12 +41,23 @@
 
             <!--provides Stamp actions-->
             <div class="stamp-detail-actions">
-                <form method="POST" action="{% url 'leave_stamp' stamp.pk %}">
-                    {% csrf_token %}
-                    <button type="submit" class="stamp-join-button">
-                        Leave Stamp
-                    </button>
-                </form>
+                {% if has_joined %}
+                    <form method="POST" action="{% url 'leave_stamp' stamp.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="stamp-join-button">
+                            Leave Stamp
+                        </button>
+                    </form>
+                {% elif is_full %}
+                    <p>This Stamp has reached its participant limit.</p>
+                {% else %}
+                    <form method="POST" action="{% url 'join_permission' stamp.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="stamp-join-button">
+                            Join Stamp
+                        </button>
+                    </form>
+                {% endif %}
 
                 <a href="{% url 'stamp_detail' stamp.pk %}" class="stamp-home-link">
                     Back to Stamp

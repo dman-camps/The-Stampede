@@ -157,3 +157,108 @@ class AuthTests(TestCase):
                 self.signup()
         self.assertFalse(email_verified(User.objects.get(username='new')))
         self.assertNotIn('_auth_user_id', self.client.session)
+
+
+class ParticipationTests(TestCase):
+
+    def setUp(self):
+        self.creator = self.create_verified_user('creator')
+        self.student = self.create_verified_user('student')
+        self.stamp = Stamp.objects.create(
+            title='Study group',
+            desc='Prepare for the midterm',
+            date='2026-11-15',
+            time='13:00',
+            end_time='14:00',
+            location='Criss Library',
+            max_participants=2,
+            creator=self.creator,
+        )
+
+    def create_verified_user(self, username):
+        user = User.objects.create_user(
+            username,
+            f'{username}@unomaha.edu',
+            'Valid-Pass-834!'
+        )
+        EmailAddress.objects.create(
+            user=user,
+            email=user.email,
+            verified=True,
+            primary=True,
+        )
+        return user
+
+    def test_detail_displays_creator_and_available_join_action(self):
+        self.client.force_login(self.student)
+        response = self.client.get(f'/stamps/{self.stamp.pk}/')
+
+        self.assertContains(response, self.creator.username)
+        self.assertContains(response, 'Join Stamp')
+        self.assertContains(response, '0 / 2')
+
+    def test_join_adds_participant_and_duplicate_join_does_not(self):
+        self.client.force_login(self.student)
+
+        self.client.post(f'/stamps/{self.stamp.pk}/join/')
+        self.client.post(f'/stamps/{self.stamp.pk}/join/')
+
+        self.assertEqual(
+            StampParticipation.objects.filter(stamp=self.stamp).count(),
+            1
+        )
+        self.stamp.refresh_from_db()
+        self.assertEqual(self.stamp.num_participants, 1)
+
+        response = self.client.get(f'/stamps/{self.stamp.pk}/')
+        self.assertContains(response, 'You have joined this Stamp.')
+        self.assertContains(response, 'Leave Stamp')
+        self.assertNotContains(response, '>Join Stamp<', html=False)
+
+    def test_full_stamp_rejects_additional_participant(self):
+        first = self.create_verified_user('first')
+        second = self.create_verified_user('second')
+        third = self.create_verified_user('third')
+
+        StampParticipation.objects.create(user=first, stamp=self.stamp)
+        StampParticipation.objects.create(user=second, stamp=self.stamp)
+        self.stamp.num_participants = 2
+        self.stamp.save(update_fields=['num_participants'])
+
+        self.client.force_login(third)
+        response = self.client.post(f'/stamps/{self.stamp.pk}/join/')
+
+        self.assertEqual(response.status_code, 400)
+        self.assertContains(response, 'Stamp is full', status_code=400)
+        self.assertFalse(
+            StampParticipation.objects.filter(
+                user=third,
+                stamp=self.stamp
+            ).exists()
+        )
+
+        detail = self.client.get(f'/stamps/{self.stamp.pk}/')
+        self.assertContains(detail, 'Stamp Full')
+        self.assertContains(detail, '2 / 2')
+
+    def test_leave_removes_participant_and_updates_count(self):
+        StampParticipation.objects.create(user=self.student, stamp=self.stamp)
+        self.stamp.num_participants = 1
+        self.stamp.save(update_fields=['num_participants'])
+        self.client.force_login(self.student)
+
+        response = self.client.post(f'/stamps/{self.stamp.pk}/leave/')
+
+        self.assertRedirects(
+            response,
+            f'/stamps/{self.stamp.pk}/',
+            fetch_redirect_response=False
+        )
+        self.assertFalse(
+            StampParticipation.objects.filter(
+                user=self.student,
+                stamp=self.stamp
+            ).exists()
+        )
+        self.stamp.refresh_from_db()
+        self.assertEqual(self.stamp.num_participants, 0)

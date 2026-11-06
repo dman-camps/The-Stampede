@@ -75,27 +75,45 @@
                 <div class="detail-item">
                     <span class="detail-label">Participants</span>
                     <span class="detail-value">
-                        {{ stamp.num_participants }} / {{ stamp.max_participants }}
+                        {{ participant_count }} / {{ stamp.max_participants }}
                     </span>
                 </div>
 
                 <div class="detail-item">
                     <span class="detail-label">Created By</span>
                     <span class="detail-value">
-                        {{ stamp.owner.username|default:"Unknown" }}
+                        {{ stamp.creator.username|default:"Unknown" }}
                     </span>
                 </div>
             </div>
 
-            <!--provides join and home actions-->
+            <!--provides participation and navigation actions-->
             <div class="stamp-detail-actions">
-                <form method="post" action="{% url 'join_permission' stamp.pk %}">
-                    {% csrf_token %}
-                    <button type="submit" class="stamp-join-button">
-                        Check Join Permission
+                {% if has_joined %}
+                    <p>You have joined this Stamp.</p>
+                    <form method="post" action="{% url 'leave_stamp' stamp.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="stamp-join-button">
+                            Leave Stamp
+                        </button>
+                    </form>
+                {% elif is_full %}
+                    <p>This Stamp has reached its participant limit.</p>
+                    <button type="button" class="stamp-join-button" disabled>
+                        Stamp Full
                     </button>
-                </form>
+                {% else %}
+                    <form method="post" action="{% url 'join_permission' stamp.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="stamp-join-button">
+                            Join Stamp
+                        </button>
+                    </form>
+                {% endif %}
 
+                <a href="{% url 'stamp_participants' stamp.pk %}" class="stamp-home-link">
+                    View Participants
+                </a>
                 <a href="/" class="stamp-home-link">Return Home</a>
             </div>
         </article>

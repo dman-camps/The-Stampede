@@ -4,8 +4,9 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.models import User
+from pyexpat.errors import messages
 
-from .forms import StampForm
+from .forms import StampForm, AccountForm
 from .models import Stamp, StampParticipation
 
 
@@ -171,3 +172,19 @@ def stamp_detail(request, pk):
     return render(request, "detail.html", {
         "stamp": stamp
     })
+
+@login_required
+@require_http_methods(["GET", "POST"])
+def account(request):
+    if request.method == "POST":
+        form = AccountForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect("account")
+    else:
+        form = AccountForm(instance=request.user)
+
+    owned_stamps = Stamp.objects.filter(creator=request.user).order_by("date", "time")
+    attending_stamps = Stamp.objects.filter(pk__in=StampParticipation.objects.filter(user=request.user).values("stamp")).order_by("date", "time")
+
+    return render(request, "stamps/account.html", {"form": form, "owned_stamps": owned_stamps, "attending_stamps": attending_stamps})

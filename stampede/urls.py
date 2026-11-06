@@ -14,4 +14,5 @@ urlpatterns = [
     path('stamps/<int:pk>/join/', views.join_permission, name='join_permission'),
     path('stamps/<int:pk>/participants/', views.stamp_participants, name='stamp_participants'),
     path('stamps/<int:pk>/leave/', views.leave_stamp, name='leave_stamp'),
+    path("account/", views.account, name="account")
 ]

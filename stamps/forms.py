@@ -2,6 +2,21 @@ from django import forms
 from .models import Stamp
 
 
+class StampSearchForm(forms.Form):
+    q = forms.CharField(required=False, max_length=100, label='Keywords',
+        widget=forms.TextInput(attrs={'placeholder': 'Search title or description'}))
+    category = forms.ChoiceField(required=False,
+        choices=[('', 'All categories')] + Stamp.CATEGORY_CHOICES)
+    date = forms.DateField(required=False,
+        widget=forms.DateInput(attrs={'type': 'date'}))
+    location = forms.CharField(required=False, max_length=255,
+        widget=forms.TextInput(attrs={'placeholder': 'e.g. Library'}))
+    max_cost = forms.DecimalField(required=False, min_value=0,
+        max_digits=8, decimal_places=2, label='Maximum cost ($)',
+        widget=forms.NumberInput(attrs={'min': '0', 'step': '0.01'}))
+    available_only = forms.BooleanField(required=False, label='Only Stamps with spots available')
+
+
 class StampForm(forms.ModelForm):
     #defines available campus locations
     LOCATION_CHOICES = [
@@ -119,6 +134,7 @@ class StampForm(forms.ModelForm):
         model = Stamp
         fields = [
             "title",
+            "category",
             "desc",
             "date",
             "time",

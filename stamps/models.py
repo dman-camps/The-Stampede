@@ -3,8 +3,16 @@ from django.db.models import Q
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 
-# Create your models here.
+# Create models here.
 class Stamp(models.Model):
+    CATEGORY_CHOICES = [
+        ('study', 'Study'),
+        ('social', 'Social'),
+        ('sports', 'Sports'),
+        ('volunteering', 'Volunteering'),
+        ('other', 'Other'),
+    ]
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES, default='other')
     title = models.CharField(max_length=100) #max length tbd?
     desc = models.TextField()
     date = models.DateField() #separate date/time instead of DateTimeField() for easier editing

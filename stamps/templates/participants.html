@@ -9,12 +9,13 @@
     <link rel="stylesheet" href="{% static 'stamps/styles.css' %}">
 </head>
 <body>
+    <!--adds shared header-->
+    {% include 'stamps/_header.html' %}
+
     <!--displays participant page-->
     <main class="stamp-detail-page">
         <section class="stamp-detail-card">
             <body>
-                <!--adds shared header-->
-                {% include 'stamps/_header.html' %}
 
             <!--displays Stamp participants-->
             <section class="stamp-participants-section">

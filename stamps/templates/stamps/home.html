@@ -29,6 +29,24 @@
                 <a class="button" href="{% url 'create' %}">Create a Stamp</a>
             </p>
             <!--displays available Stamps-->
+            <section class="card search-card" aria-labelledby="search-heading">
+                <h2 id="search-heading">Find a Stamp</h2>
+                <form method="get" action="{% url 'home' %}">
+                    <div class="search-fields">
+                        {% for field in search_form %}
+                            <div class="search-field{% if field.name == 'available_only' %} search-checkbox{% endif %}">
+                                {{ field.label_tag }}
+                                {{ field }}
+                                {{ field.errors }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                    <div class="search-actions">
+                        <button type="submit">Search</button>
+                        <a href="{% url 'home' %}">Clear filters</a>
+                    </div>
+                </form>
+            </section>
             <div class="grid">
                 {% for stamp in stamps %}
                     <article class="card">
@@ -38,6 +56,7 @@
                             </a>
                         </h2>
                         <p>{{ stamp.date }} · {{ stamp.time }}</p>
+                        <p>{{ stamp.get_category_display }}</p>
                         <p>{{ stamp.location }}</p>
                         <p>{{ stamp.participant_count }} / {{ stamp.max_participants }} participants</p>
                         <p class="muted">
@@ -46,7 +65,13 @@
                     </article>
                 {% empty %}
                     <!--shows message when no Stamps exist-->
-                    <p>No Stamps yet. Create the first one.</p>
+                    {% if search_form.errors %}
+                        <p>Please correct the filters above and search again.</p>
+                    {% elif request.GET %}
+                        <p>No Stamps match your filters. Try fewer filters or clear them.</p>
+                    {% else %}
+                        <p>No Stamps yet. Create the first one.</p>
+                    {% endif %}
                 {% endfor %}
             </div>
         {% elif user.is_authenticated %}

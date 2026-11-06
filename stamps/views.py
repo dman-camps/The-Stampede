@@ -122,10 +122,15 @@ def stamp_participants(request, pk):
         stamp=stamp
     ).exists()
 
+    participant_count = participants.count()
+    is_full = participant_count >= stamp.max_participants
+
     return render(request, "participants.html", {
         "stamp": stamp,
         "participants": participants,
         "has_joined": has_joined,
+        "participant_count": participant_count,
+        "is_full": is_full,
     })
 
 #allows users to leave Stamp
@@ -138,20 +143,23 @@ def leave_stamp(request, pk):
             status=403
         )
 
-    #finds requested Stamp
-    stamp = get_object_or_404(Stamp, pk=pk)
+    from django.db import transaction
 
-    #removes user from Stamp
-    StampParticipation.objects.filter(
-        user=request.user,
-        stamp=stamp
-    ).delete()
+    #locks the Stamp while participation and its stored count are updated
+    with transaction.atomic():
+        stamp = get_object_or_404(
+            Stamp.objects.select_for_update(), pk=pk
+        )
 
-    #updates participant count
-    stamp.num_participants = StampParticipation.objects.filter(
-        stamp=stamp
-    ).count()
-    stamp.save(update_fields=["num_participants"])
+        StampParticipation.objects.filter(
+            user=request.user,
+            stamp=stamp
+        ).delete()
+
+        stamp.num_participants = StampParticipation.objects.filter(
+            stamp=stamp
+        ).count()
+        stamp.save(update_fields=["num_participants"])
 
     return redirect("stamp_detail", pk=pk)
 
@@ -168,6 +176,18 @@ def stamp_detail(request, pk):
     #finds requested Stamp
     stamp = get_object_or_404(Stamp, pk=pk)
 
+    participant_count = StampParticipation.objects.filter(
+        stamp=stamp
+    ).count()
+    has_joined = StampParticipation.objects.filter(
+        user=request.user,
+        stamp=stamp
+    ).exists()
+    is_full = participant_count >= stamp.max_participants
+
     return render(request, "detail.html", {
-        "stamp": stamp
+        "stamp": stamp,
+        "participant_count": participant_count,
+        "has_joined": has_joined,
+        "is_full": is_full,
     })

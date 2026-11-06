@@ -132,7 +132,7 @@ class AuthTests(TestCase):
     def test_owner_join_demo_and_no_edit_routes(self):
         self.verify()
         self.client.force_login(self.user)
-        response = self.client.post('/create/', dict(title='New', desc='desc', date='2026-11-02', time='13:00', end_time='14:00', location='Criss Library', cost='0', max_participants='5', creator='999'))
+        response = self.client.post('/create/', dict(title='New', category='study', desc='desc', date='2026-11-02', time='13:00', end_time='14:00', location='Criss Library', cost='0', max_participants='5', creator='999'))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Stamp.objects.get(title='New').creator, self.user)
         response = self.client.post(f'/stamps/{self.stamp.pk}/join/')

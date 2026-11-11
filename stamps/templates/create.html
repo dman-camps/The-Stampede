@@ -15,7 +15,7 @@
     <main>
         <!--displays Stamp creation form-->
         <section class="card account-card">
-            <h1>Create a Stamp</h1>
+            <h1>{% if editing %}Edit your Stamp{% else %}Create a Stamp{% endif %}</h1>
             <p class="muted">
                 Create an activity for other UNO students to discover and join.
                 Fill out the details below.
@@ -63,7 +63,7 @@
                 {% endfor %}
 
                 <!--submits Stamp creation form-->
-                <button type="submit">Create Stamp</button>
+                <button type="submit">{% if editing %}Save changes{% else %}Create Stamp{% endif %}</button>
             </form>
 
             <p>

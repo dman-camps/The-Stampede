@@ -11,12 +11,21 @@ class StampSearchForm(forms.Form):
         choices=[('', 'All categories')] + Stamp.CATEGORY_CHOICES)
     date = forms.DateField(required=False,
         widget=forms.DateInput(attrs={'type': 'date'}))
-    location = forms.CharField(required=False, max_length=255,
-        widget=forms.TextInput(attrs={'placeholder': 'e.g. Library'}))
+    location = forms.CharField(required=False, max_length=255, label='Campus location', widget=forms.Select())
     max_cost = forms.DecimalField(required=False, min_value=0,
         max_digits=8, decimal_places=2, label='Maximum cost ($)',
         widget=forms.NumberInput(attrs={'min': '0', 'step': '1'}))
     available_only = forms.BooleanField(required=False, label='Only Stamps with spots available')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        known = [value for value, label in StampForm.LOCATION_CHOICES if value and value != 'Other']
+        existing = list(Stamp.objects.exclude(location='').values_list('location', flat=True).distinct().order_by('location'))
+        choices = [('', 'All locations')] + [(value, value) for value in sorted(set(known + existing), key=str.casefold)]
+        selected = self.data.get(self.add_prefix('location')) if self.is_bound else None
+        if selected and selected not in {value for value, _ in choices}:
+            choices.append((selected, selected))
+        self.fields['location'].widget.choices = choices
 
 
 class StampForm(forms.ModelForm):
@@ -74,6 +83,16 @@ class StampForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields["time"].required = True
         self.fields["end_time"].required = True
+        if self.instance and self.instance.pk and self.instance.location:
+            raw = self.instance.location
+            base, sep, area = raw.partition(" — ")
+            known = {value for value, label in self.LOCATION_CHOICES}
+            if base in known and base != "Other":
+                self.initial["location"] = base
+            else:
+                self.initial["location"] = "Other"
+                self.initial["other_location"] = base
+            self.initial["specify_area"] = area if sep else ""
 
     #checks that cost is not negative
     def clean_cost(self):
@@ -213,3 +232,41 @@ class AccountForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ["username"]
+class ProfileForm(forms.ModelForm):
+    first_name = forms.CharField(max_length=150, required=False)
+    last_name = forms.CharField(max_length=150, required=False)
+
+    class Meta:
+        from .models import UserProfile
+        model = UserProfile
+        fields = ['display_name', 'bio', 'interests', 'campus_location']
+        widgets = {
+            'bio': forms.Textarea(attrs={'rows': 4, 'placeholder': 'A little about you...'}),
+            'interests': forms.TextInput(attrs={'placeholder': 'Robotics, music, hiking'}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop('user', None)
+        super().__init__(*args, **kwargs)
+        if self.user:
+            self.fields['first_name'].initial = self.user.first_name
+            self.fields['last_name'].initial = self.user.last_name
+
+    def save(self, commit=True):
+        profile = super().save(commit=commit)
+        if self.user:
+            self.user.first_name = self.cleaned_data['first_name']
+            self.user.last_name = self.cleaned_data['last_name']
+            self.user.save(update_fields=['first_name', 'last_name'])
+        return profile
+
+
+class ReportForm(forms.Form):
+    reason = forms.ChoiceField(choices=[
+        ('misleading', 'Misleading or inaccurate information'),
+        ('inappropriate', 'Inappropriate content'),
+        ('spam', 'Spam or advertising'),
+        ('unsafe', 'Safety concern'),
+        ('other', 'Other'),
+    ])
+    details = forms.CharField(required=False, max_length=1000, widget=forms.Textarea(attrs={'rows': 4, 'placeholder': 'Add details (optional)'}))

@@ -1,27 +1,8 @@
 {% load static %}
-
-<!--displays shared website header-->
 <header class="site-header">
-    <strong class="site-title">The Stampede</strong>
-
-    <!--provides navigation links-->
-    <nav>
-        <a href="{% url 'home' %}">Home</a>
-
-        {% if user.is_authenticated %}
-
-            <!--shows signed in username-->
-            <span>Signed in: <a href="{% url 'account' %}">{{ user.username }}</a></span>
-
-            <!--provides logout form-->
-            <form method="post" action="{% url 'logout' %}">
-                {% csrf_token %}
-                <button type="submit">Log out</button>
-            </form>
-        {% else %}
-            <!--provides login and registration links-->
-            <a href="{% url 'login' %}">Login</a>
-            <a href="{% url 'register' %}">Register</a>
-        {% endif %}
-    </nav>
+  <a class="brand" href="{% url 'home' %}"><span class="brand-mark">✳</span><span>The Stampede<small>Find your people. Make your mark.</small></span></a>
+  <nav class="main-nav"><a href="{% url 'home' %}">Home</a><a href="{% url 'search' %}">Explore</a>
+  {% if user.is_authenticated %}<a href="{% url 'create' %}">Create a Stamp</a><a href="{% url 'profile' %}">My profile</a>
+  <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button class="nav-button">Log out</button></form>
+  {% else %}<a href="{% url 'login' %}">Log in</a><a class="nav-cta" href="{% url 'register' %}">Join UNO's community</a>{% endif %}</nav>
 </header>

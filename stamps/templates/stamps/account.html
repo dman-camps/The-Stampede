@@ -56,6 +56,14 @@
                     <p class="muted">
                         Organizer: {{ stamp.creator.username|default:'Unassigned' }}
                     </p>
+
+                    <form method="post" action="{% url 'delete_stamp' stamp.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="button"
+                            onclick="return confirm('Are you sure you want to delete this Stamp?');">
+                            Delete Stamp
+                        </button>
+                    </form>
                 </article>
             {% empty %}
                 <p>You haven't created any Stamps yet.

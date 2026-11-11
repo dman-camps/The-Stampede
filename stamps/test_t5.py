@@ -4,15 +4,18 @@ from django.contrib.staticfiles import finders
 from django.test import TestCase
 from django.urls import reverse
 from .models import Stamp, StampParticipation
+from datetime import timedelta
+from django.utils import timezone
 
 #tests home feed behavior
 class HomeFeedTests(TestCase):
 
     #creates sample user and Stamp
     def setUp(self):
+        current_date = timezone.localdate()
         self.user = User.objects.create_user('student', 'student@unomaha.edu')
         self.stamp = Stamp.objects.create(title='Campus meetup', desc='Event text',
-            date='2026-11-01', time='12:00', location='Library',
+            date=current_date + timedelta(days=2), time='12:00', location='Library',
             max_participants=10, num_participants=9, creator=self.user)
 
     #verifies email and signs in user
@@ -50,9 +53,10 @@ class HomeFeedTests(TestCase):
     #checks ordering and missing creators
     def test_order_and_null_creator(self):
         self.verified_login()
-        early = Stamp.objects.create(title='Early', desc='', date='2026-10-31',
+        current_date = timezone.localdate()
+        early = Stamp.objects.create(title='Early', desc='', date=current_date + timedelta(days=1),
             time='16:00', location='Campus', max_participants=5)
-        morning = Stamp.objects.create(title='Morning', desc='', date='2026-11-01',
+        morning = Stamp.objects.create(title='Morning', desc='', date=current_date + timedelta(days=2),
             time='08:00', location='Campus', max_participants=5)
         tie = Stamp.objects.create(title='Tie', desc='', date=self.stamp.date,
             time=self.stamp.time, location='Campus', max_participants=5)

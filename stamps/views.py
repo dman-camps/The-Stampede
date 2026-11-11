@@ -5,6 +5,8 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.models import User
 from django.contrib import messages
+from django.db.models import Q
+from django.utils import timezone
 
 from .forms import StampForm, AccountForm
 from .models import Stamp, StampParticipation
@@ -206,6 +208,26 @@ def account(request):
         form = AccountForm(instance=request.user)
 
     owned_stamps = Stamp.objects.filter(creator=request.user).order_by("date", "time")
-    attending_stamps = Stamp.objects.filter(pk__in=StampParticipation.objects.filter(user=request.user).values("stamp")).order_by("date", "time")
+    current_date = timezone.localdate()
+    current_time = timezone.localtime().time().replace(tzinfo=None)
+
+    #filters out expired Stamps from attending list
+    attending_stamps = Stamp.objects.filter(pk__in=StampParticipation.objects.filter(user=request.user).values("stamp")).filter(
+        Q(date__gt=current_date) | Q(date=current_date, end_time__isnull=True) | Q(date=current_date, end_time__gt=current_time)).order_by("date", "time")
 
     return render(request, "stamps/account.html", {"form": form, "owned_stamps": owned_stamps, "attending_stamps": attending_stamps})
+
+#allows creators to delete their own Stamps
+@login_required
+@require_POST
+def delete_stamp(request, pk):
+    stamp = get_object_or_404(
+        Stamp,
+        pk=pk,
+        creator=request.user
+    )
+
+    stamp_title = stamp.title
+    stamp.delete()
+    messages.success(request, f'"{stamp_title}" was deleted successfully.')
+    return redirect("account")

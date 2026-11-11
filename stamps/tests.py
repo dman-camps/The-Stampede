@@ -6,6 +6,8 @@ from django.contrib.auth.models import User
 from django.core import mail
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
+from django.utils import timezone
+from datetime import timedelta
 from .models import Stamp, StampParticipation
 from .views import email_verified
 
@@ -132,15 +134,15 @@ class AuthTests(TestCase):
     def test_owner_join_demo_and_no_edit_routes(self):
         self.verify()
         self.client.force_login(self.user)
-        response = self.client.post('/create/', dict(title='New', category='study', desc='desc', date='2026-11-02', time='13:00', end_time='14:00', location='Criss Library', cost='0', max_participants='5', creator='999'))
+        current_date = timezone.localdate()
+        response = self.client.post('/create/', dict(title='New', category='study', desc='desc', date=(current_date + timedelta(days=2)).isoformat(), time='13:00', end_time='14:00', location='Criss Library', cost='0', max_participants='5', creator='999'))
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Stamp.objects.get(title='New').creator, self.user)
         response = self.client.post(f'/stamps/{self.stamp.pk}/join/')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(StampParticipation.objects.count(), 1)
         self.assertEqual(self.client.post(f'/stamps/{self.stamp.pk}/').status_code, 405)
-        for action in ['edit', 'delete']:
-            self.assertEqual(self.client.post(f'/stamps/{self.stamp.pk}/{action}/').status_code, 404)
+        self.assertEqual(self.client.post(f'/stamps/{self.stamp.pk}/edit/').status_code, 404)
         self.stamp.refresh_from_db()
         self.assertEqual(self.stamp.title, 'Team event')
 

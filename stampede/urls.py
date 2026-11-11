@@ -11,6 +11,7 @@ urlpatterns = [
     path('logout/', account_views.LogoutView.as_view(), name='logout'),
     path('verify/', account_views.email_verification_sent, name='verify_email'),
     path('stamps/<int:pk>/', views.stamp_detail, name='stamp_detail'),
+    path('stamps/<int:pk>/delete/', views.delete_stamp, name='delete_stamp'),
     path('stamps/<int:pk>/join/', views.join_permission, name='join_permission'),
     path('stamps/<int:pk>/participants/', views.stamp_participants, name='stamp_participants'),
     path('stamps/<int:pk>/leave/', views.leave_stamp, name='leave_stamp'),

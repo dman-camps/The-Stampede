@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 from .models import Stamp
 
@@ -100,6 +101,21 @@ class StampForm(forms.ModelForm):
         cleaned_data = super().clean()
         location = cleaned_data.get("location")
         other_location = cleaned_data.get("other_location", "").strip()
+        event_date = cleaned_data.get("date")
+        start_time = cleaned_data.get("time")
+        end_time = cleaned_data.get("end_time")
+
+        current_date = timezone.localdate()
+        current_time = timezone.localtime().time().replace(tzinfo=None)
+
+        #checks that event date and time are in the future
+        if event_date and start_time:
+            if event_date < current_date or (event_date == current_date and start_time <= current_time):
+                self.add_error("date", "Event date and start time must be in the future.")
+
+        #checks that event end time follows start time
+        if start_time and end_time and end_time <= start_time:
+            self.add_error("end_time", "Event end time must be after start time.")
 
         if location == "Other" and not other_location:
             self.add_error(

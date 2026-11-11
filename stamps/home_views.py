@@ -2,6 +2,7 @@
 from django.db.models import Count, F, Q
 from django.shortcuts import render
 from django.views.decorators.http import require_safe
+from django.utils import timezone
 
 from .models import Stamp
 from .forms import StampSearchForm
@@ -10,6 +11,12 @@ from .views import email_verified
 #allows safe requests to home page
 @require_safe
 def home(request):
+
+    current_date = timezone.localdate()
+    current_time = timezone.localtime().time().replace(tzinfo=None)
+
+    #deletes Stamps that have already expired
+    Stamp.objects.filter(Q(date__lt=current_date) | Q(date=current_date, end_time__lte=current_time)).delete()
     # Reuse T3 allauth verification.
     allowed = email_verified(request.user)
     stamps = []
@@ -17,9 +24,17 @@ def home(request):
 
     #loads Stamps for verified users
     if allowed:
+        current_date = timezone.localdate()
+        current_time = timezone.localtime().time().replace(tzinfo=None)
+
         stamps = (
             Stamp.objects.select_related('creator')
             .annotate(participant_count=Count('stampparticipation'))
+            .filter(
+                Q(date__gt=current_date)
+                | Q(date=current_date, end_time__isnull=True)
+                | Q(date=current_date, end_time__gt=current_time)
+            )
             .order_by('date', 'time', 'pk')
         )
         if search_form.is_valid():

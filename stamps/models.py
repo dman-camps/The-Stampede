@@ -25,6 +25,8 @@ class Stamp(models.Model):
 
     #TODO: remove null=True and blank=True once all stamps require a creator. its like this temporarily because it will give an error if a stamp is created without a creator
     creator = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True) #stores which student created the stamp
+    is_cancelled = models.BooleanField(default=False)
+    updated_at = models.DateTimeField(auto_now=True)
 
     #checks cost and participant limit
     class Meta:
@@ -65,3 +67,26 @@ class Report(models.Model):
 
     def __str__(self):
         return f"Report by {self.reporter.username} for {self.stamp.title}"
+
+class UserProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    display_name = models.CharField(max_length=80, blank=True)
+    bio = models.TextField(max_length=500, blank=True)
+    interests = models.CharField(max_length=300, blank=True, help_text='Comma-separated interests or topics')
+    campus_location = models.CharField(max_length=100, blank=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'{self.user.username} profile'
+
+
+class UserFollow(models.Model):
+    follower = models.ForeignKey(User, on_delete=models.CASCADE, related_name='following')
+    followed = models.ForeignKey(User, on_delete=models.CASCADE, related_name='followers')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        constraints = [models.UniqueConstraint(fields=['follower', 'followed'], name='unique_user_follow')]
+
+    def __str__(self):
+        return f'{self.follower.username} follows {self.followed.username}'

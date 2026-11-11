@@ -22,7 +22,7 @@
         <article class="stamp-detail-card">
             <!--displays Stamp title and description-->
             <div class="stamp-detail-header">
-                <p class="stamp-label">STAMP DETAILS</p>
+                <p class="stamp-label">STAMP DETAILS{% if stamp.is_cancelled %} · CANCELLED{% endif %}</p>
                 <h1>{{ stamp.title }}</h1>
 
                 <p class="stamp-description">
@@ -82,14 +82,22 @@
                 <div class="detail-item">
                     <span class="detail-label">Created By</span>
                     <span class="detail-value">
-                        {{ stamp.creator.username|default:"Unknown" }}
+                        {% if stamp.creator %}<a href="{% url 'public_profile' stamp.creator.username %}">{{ stamp.creator.username }}</a>{% else %}Unknown{% endif %}
                     </span>
                 </div>
             </div>
 
             <!--provides participation and navigation actions-->
             <div class="stamp-detail-actions">
-                {% if has_joined %}
+                {% if stamp.is_cancelled %}<p class="status-cancelled">This event has been cancelled.</p>{% endif %}
+                {% if stamp.creator_id == user.id %}
+                    <a class="stamp-home-link" href="{% url 'edit_stamp' stamp.pk %}">Edit Stamp</a>
+                    <form method="post" action="{% url 'cancel_stamp' stamp.pk %}">{% csrf_token %}<button class="stamp-join-button" type="submit">{% if stamp.is_cancelled %}Reopen Stamp{% else %}Cancel Stamp{% endif %}</button></form>
+                    <form method="post" action="{% url 'delete_stamp' stamp.pk %}" onsubmit="return confirm('Permanently delete this Stamp?');">{% csrf_token %}<button class="danger-button" type="submit">Delete</button></form>
+                {% else %}
+                    <a class="stamp-home-link" href="{% url 'report_stamp' stamp.pk %}">⚑ Report Stamp</a>
+                {% endif %}
+                {% if stamp.is_cancelled %}<p>Joining is unavailable because this Stamp is cancelled.</p>{% elif has_joined %}
                     <p>You have joined this Stamp.</p>
                     <form method="post" action="{% url 'leave_stamp' stamp.pk %}">
                         {% csrf_token %}

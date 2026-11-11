@@ -1,0 +1,7 @@
+<article class="stamp-card{% if stamp.is_cancelled %} cancelled{% endif %}">
+  <div class="stamp-card-top"><span class="category-tag">{{ stamp.get_category_display }}</span><span class="stamp-perforation">✳ THE STAMPEDE</span></div>
+  <h3><a href="{% url 'stamp_detail' stamp.pk %}">{{ stamp.title }}</a></h3>
+  <p class="stamp-excerpt">{{ stamp.desc|truncatechars:125 }}</p>
+  <div class="stamp-meta"><span>▦ {{ stamp.date|date:'M j, Y' }} · {{ stamp.time|time:'g:i A' }}</span><span>⌖ {{ stamp.location }}</span><span>♧ {{ stamp.participant_count|default:stamp.num_participants }} / {{ stamp.max_participants }} participants</span></div>
+  <div class="stamp-card-footer"><span>Hosted by {% if stamp.creator %}<a href="{% url 'public_profile' stamp.creator.username %}">{{ stamp.creator.username }}</a>{% else %}UNO student{% endif %}</span>{% if stamp.is_cancelled %}<strong class="status-cancelled">Cancelled</strong>{% else %}<a class="text-link" href="{% url 'stamp_detail' stamp.pk %}">View Stamp →</a>{% endif %}</div>
+</article>

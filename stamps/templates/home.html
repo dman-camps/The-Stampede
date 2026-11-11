@@ -1,11 +1,12 @@
-<!DOCTYPE html>
-<html>
-<body>
-    {% if user.is_authenticated %}
-    <p>Signed in as {{ user.username }}. <a href="{% url 'verify_email' %}">Verify email</a></p>
-    <form method="post" action="{% url 'logout' %}">{% csrf_token %}<button>Log out</button></form>
-    {% else %}<a href="{% url 'register' %}">Register</a> <a href="{% url 'login' %}">Log in</a>{% endif %}
-    {% for message in messages %}<p>{{ message }}</p>{% endfor %}
-    <button onclick="window.location.href='create/'">Create</button>
-</body>
-</html>
+{% load static %}<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>The Stampede | Discover your next thing</title><link rel="stylesheet" href="{% static 'stamps/styles.css' %}"></head><body>{% include 'stamps/_header.html' %}<main class="page-shell">
+{% if messages %}<ul class="messages">{% for message in messages %}<li>{{ message }}</li>{% endfor %}</ul>{% endif %}
+<section class="hero"><div><p class="eyebrow">YOUR CAMPUS. YOUR COMMUNITY.</p><h1>There's more happening<br><em>when you show up.</em></h1><p>Discover meetups, study sessions, campus events, and people who are into what you're into.</p><a class="primary-button" href="{% url 'search' %}">Explore Stamps <span>→</span></a></div><div class="hero-stamp"><span class="hero-star">✳</span><strong>MAKE<br>YOUR<br>MARK</strong><small>OMAHA · NEBRASKA</small></div></section>
+{% if allowed %}
+<section class="section-heading"><div><p class="eyebrow">CURATED FOR YOU</p><h2>Picked for your interests</h2><p>Based on categories of Stamps you've joined before.</p></div><a href="{% url 'search' %}">Explore all →</a></section>
+<div class="stamp-grid">{% for stamp in recommended_events %}{% include 'stamps/_stamp_card.html' %}{% empty %}<div class="empty-panel">Join a few Stamps and we'll start tailoring suggestions to your interests.</div>{% endfor %}</div>
+{% if followed_events %}<section class="section-heading"><div><p class="eyebrow">YOUR PEOPLE</p><h2>From organizers you follow</h2></div></section><div class="stamp-grid">{% for stamp in followed_events %}{% include 'stamps/_stamp_card.html' %}{% endfor %}</div>{% endif %}
+<section class="section-heading"><div><p class="eyebrow">COMING UP</p><h2>Happening around campus</h2></div><a href="{% url 'search' %}">See everything →</a></section><div class="stamp-grid">{% for stamp in upcoming_events %}{% include 'stamps/_stamp_card.html' %}{% empty %}<div class="empty-panel">No upcoming Stamps yet. Be the first to create one.</div>{% endfor %}</div>
+{% elif user.is_authenticated %}<section class="welcome-panel"><h2>Access pending · Verify your UNO email</h2><p>Verify your UNO email to unlock Stamps and campus discovery.</p><a class="primary-button" href="{% url 'verify_email' %}">Verify email</a></section>
+{% else %}<section class="welcome-panel"><h2>Welcome to The Stampede</h2><h3>Your next campus connection starts here.</h3><p>Sign in with your UNO email to discover and create student-led events.</p><a class="primary-button" href="{% url 'register' %}">Create your account</a></section>{% endif %}
+{% if allowed %}<section class="section-heading"><div><p class="eyebrow">THE COMMUNITY BOARD</p><h2>All Stamps</h2></div><a href="{% url 'search' %}">Advanced search →</a></section><section class="filter-panel"><form method="get" action="{% url 'home' %}">{% for field in search_form %}<div class="search-field">{{ field.label_tag }}{{ field }}</div>{% endfor %}<div class="filter-actions"><button class="primary-button">Filter feed</button><a href="{% url 'home' %}">Clear</a></div></form></section><div class="stamp-grid">{% for stamp in stamps %}{% include 'stamps/_stamp_card.html' %}{% empty %}<div class="empty-panel">{% if search_form.errors %}Please correct the filters above.{% elif request.GET %}No Stamps match your filters.{% else %}No Stamps yet. Create the first one.{% endif %}</div>{% endfor %}</div>{% endif %}
+<footer class="site-footer">THE STAMPEDE <span>·</span> PURPLE TEAM <span>·</span> UNIVERSITY OF NEBRASKA AT OMAHA</footer></main></body></html>

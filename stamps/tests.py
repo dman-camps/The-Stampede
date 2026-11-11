@@ -1,3 +1,4 @@
+from datetime import timedelta
 import re
 import time
 from unittest.mock import patch
@@ -7,7 +8,6 @@ from django.core import mail
 from django.core.cache import cache
 from django.test import Client, TestCase, override_settings
 from django.utils import timezone
-from datetime import timedelta
 from .models import Stamp, StampParticipation
 from .views import email_verified
 
@@ -53,9 +53,11 @@ class AuthTests(TestCase):
     def test_domain_duplicates_and_weak_password(self):
         self.signup()
         self.client.logout()
+
         for email in ['NEW@unomaha.edu', 'x@example.com', 'x@unomaha.edu.evil.test']:
             self.client.post('/register/', dict(username='other', email=email, password1='Other-Pass-563!', password2='Other-Pass-563!'))
             self.assertFalse(User.objects.filter(username='other').exists())
+
         self.client.post('/register/', dict(username='weak', email='weak@unomaha.edu', password1='123', password2='123'))
         self.assertFalse(User.objects.filter(username='weak').exists())
 
@@ -72,8 +74,10 @@ class AuthTests(TestCase):
     #checks verification attempt limits
     def test_attempt_limit(self):
         code = self.signup()
+
         for _ in range(4):
             self.client.post('/verify/', {'code': '111111' if code != '111111' else '222222'})
+
         self.client.post('/verify/', {'action': 'resend'})
         self.assertEqual(self.client.session['account_email_verification_code']['failed_attempts'], 4)
         self.client.post('/verify/', {'code': '000000' if code != '000000' else '333333'})
@@ -117,34 +121,100 @@ class AuthTests(TestCase):
     #checks protected pages and changed emails
     def test_protection_and_changed_email(self):
         paths = ['/create/', f'/stamps/{self.stamp.pk}/', f'/stamps/{self.stamp.pk}/join/']
+
         for path in paths:
             self.assertEqual(self.client.get(path).status_code, 302)
         self.client.force_login(self.user)
+
         for path in paths:
             method = self.client.post if path.endswith('join/') else self.client.get
             self.assertEqual(method(path).status_code, 403)
         self.verify()
         self.assertContains(self.client.get(paths[1]), 'Public desc')
+
         for email in ['changed@unomaha.edu', 'student@example.com']:
             self.user.email = email
             self.user.save()
             self.assertEqual(self.client.get('/create/').status_code, 403)
 
-    #checks Stamp ownership and unavailable actions
-    def test_owner_join_demo_and_no_edit_routes(self):
+    # checks Stamp ownership, editing, cancellation, and deletion
+    def test_owner_join_demo_and_edit_routes(self):
         self.verify()
         self.client.force_login(self.user)
         current_date = timezone.localdate()
-        response = self.client.post('/create/', dict(title='New', category='study', desc='desc', date=(current_date + timedelta(days=2)).isoformat(), time='13:00', end_time='14:00', location='Criss Library', cost='0', max_participants='5', creator='999'))
+        response = self.client.post('/create/', dict(
+            title='New', category='study', desc='desc',
+            date=(current_date + timedelta(days=2)).isoformat(),
+            time='13:00', end_time='14:00',
+            location='Criss Library', cost='0',
+            max_participants='5', creator='999'
+        ))
+
         self.assertEqual(response.status_code, 302)
         self.assertEqual(Stamp.objects.get(title='New').creator, self.user)
         response = self.client.post(f'/stamps/{self.stamp.pk}/join/')
         self.assertEqual(response.status_code, 302)
         self.assertEqual(StampParticipation.objects.count(), 1)
         self.assertEqual(self.client.post(f'/stamps/{self.stamp.pk}/').status_code, 405)
-        self.assertEqual(self.client.post(f'/stamps/{self.stamp.pk}/edit/').status_code, 404)
+
+        # Owner can access and edit their Stamp
+        self.assertEqual(self.client.get(f'/stamps/{self.stamp.pk}/edit/').status_code, 200)
+
+        current_date = timezone.localdate()
+        response = self.client.post(f'/stamps/{self.stamp.pk}/edit/', {
+            'title': 'Updated Team event',
+            'category': 'study',
+            'desc': 'Updated description',
+            'date': (current_date + timedelta(days=3)).isoformat(),
+            'time': '12:00',
+            'end_time': '13:00',
+            'location': 'Criss Library',
+            'cost': '0',
+            'max_participants': '10',
+        })
+
+        self.assertEqual(response.status_code, 302)
         self.stamp.refresh_from_db()
-        self.assertEqual(self.stamp.title, 'Team event')
+        self.assertEqual(self.stamp.title, 'Updated Team event')
+
+        # Owner can cancel and reverse cancellation
+        response = self.client.post(f'/stamps/{self.stamp.pk}/cancel/')
+        self.assertEqual(response.status_code, 302)
+        self.stamp.refresh_from_db()
+        self.assertTrue(self.stamp.is_cancelled)
+        self.client.post(f'/stamps/{self.stamp.pk}/cancel/')
+        self.stamp.refresh_from_db()
+        self.assertFalse(self.stamp.is_cancelled)
+
+        # Another user cannot edit, cancel, or delete this Stamp
+        other_user = User.objects.create_user(
+            'otherstudent', 'other@unomaha.edu', 'Valid-Pass-834!'
+        )
+
+        self.client.force_login(other_user)
+        for action in ['edit', 'cancel', 'delete']:
+            response = self.client.post(f'/stamps/{self.stamp.pk}/{action}/')
+            self.assertEqual(response.status_code, 404)
+
+        self.stamp.refresh_from_db()
+        self.assertEqual(self.stamp.title, 'Updated Team event')
+
+        # Owner can delete their own Stamp
+        self.client.force_login(self.user)
+        disposable = Stamp.objects.create(
+            title='Delete me',
+            desc='Temporary event',
+            date='2026-12-04',
+            time='12:00',
+            end_time='13:00',
+            location='Criss Library',
+            max_participants=5,
+            creator=self.user,
+        )
+
+        response = self.client.post(f'/stamps/{disposable.pk}/delete/')
+        self.assertEqual(response.status_code, 302)
+        self.assertFalse(Stamp.objects.filter(pk=disposable.pk).exists())
 
     #checks CSRF protection on forms
     def test_csrf(self):
@@ -160,9 +230,7 @@ class AuthTests(TestCase):
         self.assertFalse(email_verified(User.objects.get(username='new')))
         self.assertNotIn('_auth_user_id', self.client.session)
 
-
 class ParticipationTests(TestCase):
-
     def setUp(self):
         self.creator = self.create_verified_user('creator')
         self.student = self.create_verified_user('student')
@@ -194,24 +262,17 @@ class ParticipationTests(TestCase):
     def test_detail_displays_creator_and_available_join_action(self):
         self.client.force_login(self.student)
         response = self.client.get(f'/stamps/{self.stamp.pk}/')
-
         self.assertContains(response, self.creator.username)
         self.assertContains(response, 'Join Stamp')
         self.assertContains(response, '0 / 2')
 
     def test_join_adds_participant_and_duplicate_join_does_not(self):
         self.client.force_login(self.student)
-
         self.client.post(f'/stamps/{self.stamp.pk}/join/')
         self.client.post(f'/stamps/{self.stamp.pk}/join/')
-
-        self.assertEqual(
-            StampParticipation.objects.filter(stamp=self.stamp).count(),
-            1
-        )
+        self.assertEqual(StampParticipation.objects.filter(stamp=self.stamp).count(), 1)
         self.stamp.refresh_from_db()
         self.assertEqual(self.stamp.num_participants, 1)
-
         response = self.client.get(f'/stamps/{self.stamp.pk}/')
         self.assertContains(response, 'You have joined this Stamp.')
         self.assertContains(response, 'Leave Stamp')
@@ -221,24 +282,15 @@ class ParticipationTests(TestCase):
         first = self.create_verified_user('first')
         second = self.create_verified_user('second')
         third = self.create_verified_user('third')
-
         StampParticipation.objects.create(user=first, stamp=self.stamp)
         StampParticipation.objects.create(user=second, stamp=self.stamp)
         self.stamp.num_participants = 2
         self.stamp.save(update_fields=['num_participants'])
-
         self.client.force_login(third)
         response = self.client.post(f'/stamps/{self.stamp.pk}/join/')
-
         self.assertEqual(response.status_code, 400)
         self.assertContains(response, 'Stamp is full', status_code=400)
-        self.assertFalse(
-            StampParticipation.objects.filter(
-                user=third,
-                stamp=self.stamp
-            ).exists()
-        )
-
+        self.assertFalse(StampParticipation.objects.filter(user=third, stamp=self.stamp).exists())
         detail = self.client.get(f'/stamps/{self.stamp.pk}/')
         self.assertContains(detail, 'Stamp Full')
         self.assertContains(detail, '2 / 2')
@@ -248,19 +300,14 @@ class ParticipationTests(TestCase):
         self.stamp.num_participants = 1
         self.stamp.save(update_fields=['num_participants'])
         self.client.force_login(self.student)
-
         response = self.client.post(f'/stamps/{self.stamp.pk}/leave/')
-
         self.assertRedirects(
             response,
             f'/stamps/{self.stamp.pk}/',
             fetch_redirect_response=False
         )
+
         self.assertFalse(
-            StampParticipation.objects.filter(
-                user=self.student,
-                stamp=self.stamp
-            ).exists()
-        )
+            StampParticipation.objects.filter(user=self.student, stamp=self.stamp).exists())
         self.stamp.refresh_from_db()
         self.assertEqual(self.stamp.num_participants, 0)

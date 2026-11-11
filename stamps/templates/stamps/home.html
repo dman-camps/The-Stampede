@@ -36,7 +36,14 @@
                         {% for field in search_form %}
                             <div class="search-field{% if field.name == 'available_only' %} search-checkbox{% endif %}">
                                 {{ field.label_tag }}
-                                {{ field }}
+                                {% if field.name == 'max_cost' %}
+                                    <span class="cost-input">
+                                        <span class="dollar-sign">$</span>
+                                        {{ field }}
+                                    </span>
+                                {% else %}
+                                    {{ field }}
+                                {% endif %}
                                 {{ field.errors }}
                             </div>
                         {% endfor %}

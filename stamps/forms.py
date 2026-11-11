@@ -15,7 +15,7 @@ class StampSearchForm(forms.Form):
         widget=forms.TextInput(attrs={'placeholder': 'e.g. Library'}))
     max_cost = forms.DecimalField(required=False, min_value=0,
         max_digits=8, decimal_places=2, label='Maximum cost ($)',
-        widget=forms.NumberInput(attrs={'min': '0', 'step': '0.01'}))
+        widget=forms.NumberInput(attrs={'min': '0', 'step': '1'}))
     available_only = forms.BooleanField(required=False, label='Only Stamps with spots available')
 
 

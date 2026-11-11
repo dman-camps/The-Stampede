@@ -192,6 +192,7 @@ a:focus-visible, button:focus-visible { outline: 3px solid #a46800; outline-offs
 .cost-input {
     position: relative;
     display: block;
+    width: 100%;
 }
 
 .cost-input .dollar-sign {
@@ -201,12 +202,14 @@ a:focus-visible, button:focus-visible { outline: 3px solid #a46800; outline-offs
     transform: translateY(-50%);
     color: #606477;
     pointer-events: none;
+    z-index: 1;
 }
 
 .cost-input input {
+    display: block;
     box-sizing: border-box;
     width: 100%;
-    padding-left: 22px;
+    padding-left: 30px !important;
 }
 
 .stamp-detail-page {

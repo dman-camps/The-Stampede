@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST, require_http_methods
 from django.contrib.auth.models import User
-from pyexpat.errors import messages
+from django.contrib import messages
 
 from .forms import StampForm, AccountForm
 from .models import Stamp, StampParticipation
@@ -180,6 +180,7 @@ def account(request):
         form = AccountForm(request.POST, instance=request.user)
         if form.is_valid():
             form.save()
+            messages.success(request, "Account updated successfully.")
             return redirect("account")
     else:
         form = AccountForm(instance=request.user)

@@ -1,4 +1,6 @@
 from django import forms
+from django.contrib.auth.models import User
+
 from .models import Stamp
 
 
@@ -206,3 +208,8 @@ class CustomSignupForm(AllauthSignupForm):
             raise forms.ValidationError("Passwords do not match.")
 
         return password2
+
+class AccountForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["username"]

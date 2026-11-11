@@ -11,7 +11,7 @@
         {% if user.is_authenticated %}
 
             <!--shows signed in username-->
-            <span>Signed in: {{ user.username }}</span>
+            <span>Signed in: <a href="{% url 'account' %}">{{ user.username }}</a></span>
 
             <!--provides logout form-->
             <form method="post" action="{% url 'logout' %}">

@@ -1,0 +1,92 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>The Stampede | My Account</title>
+    <link rel="stylesheet" href="{% static 'stamps/styles.css' %}">
+</head>
+
+<body>
+    <!--adds shared header-->
+    {% include 'stamps/_header.html' %}
+    <main>
+        <!--displays messages from Django-->
+        {% if messages %}
+            <ul class="messages" aria-live="polite">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <h1>My Account</h1>
+
+        <!--shows account info and edit form-->
+        <section class="card">
+            <h2>Account information</h2>
+            <p><strong>Username:</strong> {{ user.username }}</p>
+            <p><strong>Email:</strong> {{ user.email }}</p>
+            <p class="muted">
+                <a href="{% url 'account_email' %}">Manage email addresses</a>
+            </p>
+
+            <h2>Edit account</h2>
+            <form method="post">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button class="button" type="submit">Save changes</button>
+            </form>
+        </section>
+
+        <!--displays Stamps the user owns-->
+        <h2>My Stamps</h2>
+        <div class="grid">
+            {% for stamp in owned_stamps %}
+                <article class="card">
+                    <h2>
+                        <a href="{% url 'stamp_detail' stamp.pk %}">
+                            {{ stamp.title }}
+                        </a>
+                    </h2>
+                    <p>{{ stamp.date }} · {{ stamp.time }}</p>
+                    <p>{{ stamp.location }}</p>
+                    <p>{{ stamp.num_participants }} / {{ stamp.max_participants }} participants</p>
+                    <p class="muted">
+                        Organizer: {{ stamp.creator.username|default:'Unassigned' }}
+                    </p>
+                </article>
+            {% empty %}
+                <p>You haven't created any Stamps yet.
+                    <a href="{% url 'create' %}">Create one</a>.</p>
+            {% endfor %}
+        </div>
+
+        <!--displays Stamps the user is attending-->
+        <h2>Stamps I'm Attending</h2>
+        <div class="grid">
+            {% for stamp in attending_stamps %}
+                <article class="card">
+                    <h2>
+                        <a href="{% url 'stamp_detail' stamp.pk %}">
+                            {{ stamp.title }}
+                        </a>
+                    </h2>
+                    <p>{{ stamp.date }} · {{ stamp.time }}</p>
+                    <p>{{ stamp.location }}</p>
+                    <p>{{ stamp.num_participants }} / {{ stamp.max_participants }} participants</p>
+                    <p class="muted">
+                        Organizer: {{ stamp.creator.username|default:'Unassigned' }}
+                    </p>
+                </article>
+            {% empty %}
+                <p>You haven't joined any Stamps yet.</p>
+            {% endfor %}
+        </div>
+
+        <!--displays team footer-->
+        <footer>Purple Team · The Stampede</footer>
+    </main>
+</body>
+</html>
